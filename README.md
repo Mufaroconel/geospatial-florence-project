@@ -14,14 +14,19 @@ This project analyzes Hurricane Florence's track data from 2018, including:
 ```
 geospatial_florence_project/
 ├── data/
-│   ├── florence_2018_data.py    # Data download script
-│   └── florence_2018.json       # Hurricane Florence track data
+│   ├── florence_2018_data.py        # Data download script
+│   ├── florence_2018.json           # Hurricane Florence track data (raw JSON)
+│   ├── florence_2018.geojson        # Hurricane Florence track data (GeoJSON)
+│   ├── data_utils.py                # Reusable data processing functions
+│   ├── gz_2010_us_outline_5m.json   # US map outline (5m resolution)
+│   └── gz_2010_us_outline_500k.json # US map outline (500k resolution)
 ├── notebooks/
-│   ├── load_Visualise_us_map.ipynb  # US map visualization
-│   └── Starteripynb                 # Starter notebook
-├── outputs/                     # Generated visualizations and results
-├── README.md                    # This file
-└── LICENSE                      # Project license
+│   ├── Starter.ipynb                # Starter notebook (uses reusable module)
+│   └── load_Visualise_us_map.ipynb  # US map visualization
+├── outputs/                         # Generated visualizations and results
+├── config.py                        # Centralized configuration for paths
+├── README.md                        # This file
+└── LICENSE                          # Project license
 ```
 
 ## 🚀 Getting Started
@@ -41,7 +46,6 @@ pip install requests geopandas matplotlib pandas numpy
    cd data
    python florence_2018_data.py
    ```
-   
    This script downloads the latest hurricane advisory data from [flhurricane.com](https://flhurricane.com) and saves it as `florence_2018.json`.
 
 2. **Verify Data Download:**
@@ -68,6 +72,38 @@ The downloaded JSON contains hurricane advisory data with the following structur
 }
 ```
 
+## 🛠️ Code Reusability
+
+- The function to convert JSON to GeoJSON is now in `data/data_utils.py`.
+- Use this function in your notebooks by importing it, rather than redefining it.
+
+**Example usage in a notebook:**
+```python
+import sys
+from pathlib import Path
+
+# Add project root to path for imports
+project_root = Path.cwd().parent
+sys.path.append(str(project_root))
+
+from data.data_utils import cyclone_json_to_geojson
+
+data_path = "data/florence_2018.json"
+output_path = "data/"
+geojson_file = cyclone_json_to_geojson(input_path=data_path, output_path=output_path)
+```
+
+Or, if you want to use the centralized config:
+```python
+import sys
+from pathlib import Path
+project_root = Path.cwd().parent
+sys.path.append(str(project_root))
+import config
+from data.data_utils import cyclone_json_to_geojson
+geojson_file = cyclone_json_to_geojson(input_path=config.FLORENCE_JSON, output_path=config.DATA_DIR)
+```
+
 ## 📊 Analysis Notebooks
 
 ### 1. US Map Visualization (`load_Visualise_us_map.ipynb`)
@@ -75,11 +111,10 @@ The downloaded JSON contains hurricane advisory data with the following structur
 - **Features**:
   - Creates a canvas for plotting Hurricane Florence tracks
   - Demonstrates geospatial data handling with GeoPandas
-  - Shows how to clean geospatial data (removing Alaska/Hawaii)
 
-### 2. Starter Notebook (`Starteripynb`)
+### 2. Starter Notebook (`Starter.ipynb`)
 - Entry point for new analysis workflows
-- Template for additional hurricane analysis
+- Demonstrates code reusability by importing from `data_utils.py`
 
 ## 🛠️ Tools and Libraries
 
@@ -89,43 +124,11 @@ The downloaded JSON contains hurricane advisory data with the following structur
 - **`pandas`** - Data manipulation and analysis
 - **`json`** - JSON data processing
 
-## 📈 Key Features
-
-- **Automated Data Collection**: Script-based download of hurricane data
-- **Geospatial Analysis**: Professional mapping and spatial analysis
-- **Reproducible Workflows**: Jupyter notebooks for analysis
-- **Data Validation**: Error handling and status checking
-
 ## 🔍 Data Sources
 
 - **Primary Source**: [flhurricane.com](https://flhurricane.com/cyclone/stormhistory.php?j=1&year=2018&storm=6)
 - **Data Type**: Hurricane advisory data in JSON format
 - **Coverage**: Hurricane Florence (2018) complete track
-
-## 📝 Usage Examples
-
-### Load and Inspect Data
-```python
-import json
-
-with open('data/florence_2018.json', 'r') as f:
-    data = json.load(f)
-
-print(f"Total advisories: {len(data)}")
-print("First advisory:", data[0])
-```
-
-### Basic Geospatial Analysis
-```python
-import geopandas as gpd
-import matplotlib.pyplot as plt
-
-# Load US states map
-states = gpd.read_file('path_to_us_states.geojson')
-states.plot()
-plt.title('US States Map')
-plt.show()
-```
 
 ## 🤝 Contributing
 
@@ -143,13 +146,6 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 
 - Data provided by [flhurricane.com](https://flhurricane.com)
 - Built with Python geospatial ecosystem (GeoPandas, Matplotlib)
-
-## 📞 Support
-
-For questions or issues:
-1. Check the existing notebooks for examples
-2. Review the data structure documentation above
-3. Open an issue in the repository
 
 ---
 
